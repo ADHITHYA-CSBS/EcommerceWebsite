@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini E-Commerce Store</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: #f8f9fa;
+  }
+
+  header {
+    background: #007bff;
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 1px;
+  }
+
+  .filter {
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  select {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+
+  .products {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 20px;
+  }
+
+  .product {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 220px;
+    text-align: center;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+  }
+
+  .product:hover {
+    transform: scale(1.03);
+  }
+
+  .product img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .product h4 {
+    margin: 10px 0 5px;
+  }
+
+  .product p {
+    margin: 0 0 10px;
+  }
+
+  .btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .btn:hover {
+    background: #0056b3;
+  }
+
+  .cart {
+    max-width: 500px;
+    margin: 30px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  }
+
+  .cart h3 {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  li {
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .qty-btn {
+    background: #28a745;
+    border: none;
+    color: #fff;
+    border-radius: 3px;
+    padding: 3px 6px;
+    cursor: pointer;
+  }
+
+  .qty-btn:hover {
+    background: #218838;
+  }
+
+  .remove-btn {
+    background: #dc3545;
+    border: none;
+    color: white;
+    border-radius: 3px;
+    padding: 3px 6px;
+    cursor: pointer;
+  }
+
+  .remove-btn:hover {
+    background: #b02a37;
+  }
+
+  .total {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<header>🛒 Mini E-Commerce Store</header>
+
+<div class="filter">
+  <label for="category">Filter by Category: </label>
+  <select id="category" onchange="filterProducts()">
+    <option value="all">All</option>
+    <option value="gadgets">Gadgets</option>
+    <option value="audio">Audio</option>
+    <option value="accessories">Accessories</option>
+    <option value="laptops">Laptops</option>
+  </select>
+</div>
+
+<div class="products" id="productList"></div>
+
+<div class="cart">
+  <h3>Your Cart</h3>
+  <ul id="cartItems"></ul>
+  <p class="total">Total: ₹<span id="total">0</span></p>
+</div>
+
+<script>
+const products = [
+  {id: 1, name: "Wireless Headphones", price: 1200, category: "audio", img: "https://m.media-amazon.com/images/I/61CGHv6kmWL._AC_SL1500_.jpg"},
+  {id: 2, name: "Smart Watch", price: 2500, category: "gadgets", img: "https://m.media-amazon.com/images/I/71fVoqRC0wL._AC_SL1500_.jpg"},
+  {id: 3, name: "Mechanical Keyboard", price: 900, category: "accessories", img: "https://m.media-amazon.com/images/I/71QKQ9mwV7L._AC_SL1500_.jpg"},
+  {id: 4, name: "Wireless Mouse", price: 700, category: "accessories", img: "https://m.media-amazon.com/images/I/61LtuGzXeaL._AC_SL1500_.jpg"},
+  {id: 5, name: "Bluetooth Speaker", price: 1600, category: "audio", img: "https://m.media-amazon.com/images/I/71h6PpGaz9L._AC_SL1500_.jpg"},
+  {id: 6, name: "Laptop Stand", price: 850, category: "laptops", img: "https://m.media-amazon.com/images/I/71Zf9uUp+GL._AC_SL1500_.jpg"},
+  {id: 7, name: "Gaming Laptop", price: 55000, category: "laptops", img: "https://m.media-amazon.com/images/I/81Ne5qKmE8L._AC_SL1500_.jpg"}
+];
+
+let cart = {};
+const productList = document.getElementById('productList');
+const cartItems = document.getElementById('cartItems');
+const totalEl = document.getElementById('total');
+
+function renderProducts(filteredProducts = products) {
+  productList.innerHTML = '';
+  filteredProducts.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'product';
+    div.innerHTML = `
+      <img src="${p.img}" alt="${p.name}">
+      <h4>${p.name}</h4>
+      <p>₹${p.price}</p>
+      <button class="btn" onclick="addToCart(${p.id})">Add to Cart</button>
+    `;
+    productList.appendChild(div);
+  });
+}
+
+function filterProducts() {
+  const category = document.getElementById('category').value;
+  if (category === 'all') renderProducts();
+  else {
+    const filtered = products.filter(p => p.category === category);
+    renderProducts(filtered);
+  }
+}
+
+function addToCart(id) {
+  const product = products.find(p => p.id === id);
+  if (!cart[id]) cart[id] = {...product, qty: 1};
+  else cart[id].qty++;
+  renderCart();
+}
+
+function increaseQty(id) {
+  cart[id].qty++;
+  renderCart();
+}
+
+function decreaseQty(id) {
+  if (cart[id].qty > 1) cart[id].qty--;
+  else delete cart[id];
+  renderCart();
+}
+
+function removeFromCart(id) {
+  delete cart[id];
+  renderCart();
+}
+
+function renderCart() {
+  cartItems.innerHTML = '';
+  let total = 0;
+  for (let id in cart) {
+    const item = cart[id];
+    total += item.price * item.qty;
+    const li = document.createElement('li');
+    li.innerHTML = `
+      ${item.name} x ${item.qty} = ₹${item.price * item.qty}
+      <div>
+        <button class="qty-btn" onclick="increaseQty(${item.id})">+</button>
+        <button class="qty-btn" onclick="decreaseQty(${item.id})">-</button>
+        <button class="remove-btn" onclick="removeFromCart(${item.id})">X</button>
+      </div>
+    `;
+    cartItems.appendChild(li);
+  }
+  totalEl.textContent = total;
+}
+
+renderProducts();
+</script>
+
+</body>
+</html>
